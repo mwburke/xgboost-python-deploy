@@ -6,7 +6,7 @@ This package allows users to take their XGBoost models they developed in python,
 
 ## Installation
 
-You can install this from pip using `pip install pip install xgboost-deploy-python`. The current version is 0.0.1.
+You can install this from pip using `pip install xgboost-deploy-python`. The current version is 0.0.1.
 
 It was tested on python 3.6 and and XGBoost 0.81.
 
