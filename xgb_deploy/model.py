@@ -11,7 +11,7 @@ class ProdEstimator:
     transforms it with the logit function for classification problems.
     """
 
-    def __init__(self, model_data, pred_type, base_score):
+    def __init__(self, model_data, pred_type, base_score=0.5):
         """
         Initialize estimator with type of problem and create trees used
         in estimation.
@@ -22,6 +22,9 @@ class ProdEstimator:
             pred_type: Either 'classification' or 'regression'.
             base_score: Input parameter used in training the XGBoost model.
         """
+        if (pred_type == 'classification') & (base_score != 0.5):
+            raise ValueError('For classification, please train XGB model with default base score value of 0.5')
+
         self.pred_type = pred_type
         self.base_score = base_score
         self.model_data = model_data
@@ -72,6 +75,14 @@ class ProdEstimator:
         return leaf_values
 
     def new_predict(self, tree, inst):
+        """
+        Recursive function that takes in the dictionary used to create a tree.
+        Found after I already started work on this, but it's useful.
+
+        Removes the need for OOP and makes some additional assumptions that
+        don't hold up with when you use binary variables.
+        Kept here for reference, but not mentioned in the README.
+        """
         if 'children' in tree:
             feature_id = tree['split']
             threshold = tree['split_condition']
@@ -87,12 +98,15 @@ class ProdEstimator:
             return tree['leaf']
 
     def _new_predict_row(self, data):
+        """
+        Kept here for reference, but not mentioned in the README.
+        """
         total_leaf_value = sum([self.new_predict(tree, data) for tree in self.model_data])
 
         if self.pred_type == 'regression':
             prediction = total_leaf_value + self.base_score
         if self.pred_type == 'classification':
-            prediction = 1. / (1. + math.exp(-total_leaf_value + self.base_score))
+            prediction = 1. / (1. + math.exp(-total_leaf_value))
 
         return prediction
 
@@ -116,7 +130,7 @@ class ProdEstimator:
         if self.pred_type == 'regression':
             prediction = total_leaf_value + self.base_score
         if self.pred_type == 'classification':
-            prediction = 1. / (1. + math.exp(-total_leaf_value + self.base_score))
+            prediction = 1. / (1. + math.exp(-total_leaf_value))
 
         return prediction
 

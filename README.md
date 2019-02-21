@@ -2,17 +2,11 @@
 
 This package allows users to take their XGBoost models they developed in python, and package them in a way that they can deploy the model in production using only pure python.
 
-**IMPORTANT NOTE:** currently, this package seems to be working correctly for regression problems, but is having consistent mismatches between the original and production versions of the models using the `binary:logistic` objective. This is being raised as an issue directly with XGBoost to figure out how the tree leaf values are being generated in this case. For a more detailed look into this issue, please check out the `debug.py` file. Interestingly enough, the AUROC from original and production models are equal on the same data, which indicates that the transformations performed on both maintain overall prediction ordering but causes errors in terms of true magnitude.
-
 ## Installation
 
-You can install this from pip using `pip install xgboost-deploy-python`. The current version is 0.0.1.
+You can install this from pip using `pip install xgboost-deploy-python`. The current version is 0.0.2.
 
-It was tested on python 3.6 and and XGBoost 0.81.
-
-## License
-
-© Contributors, 2019. Licensed under an [Apache-2](https://github.com/mwburke/xgboost-deploy-python/blob/master/LICENSE) license.
+It was tested on python 3.6 and and XGBoost 0.8.1.
 
 
 ## Deployment Process
@@ -123,7 +117,7 @@ Once the JSON file has been created, you need to perform three more things in or
 1. Store the base score value used in training your XGBoost model
 2. Note whether your problem is a classification or regression problem.
     - Right now, this package has only been tested for the `reg:linear` and `binary:logistic` objectives which represent regression and classification respectively.
-    - The only difference is that classification problems perform a sigmoid transformation on the margin values.
+    - When building a classification model, you **must** use the default base_score value of 0.5 (which ends up not adding an intercept bias to the results). If you use any other value, the production model will produce predictions that **do not match** the predictions from the original model.
 3. Load the JSON model file into a python list of dictionaries representing each model tree.
 
 Once you have done that, you can create your production estimator:
@@ -165,101 +159,47 @@ Benchmark regression modeling
 
 Actual vs Prod Estimator Comparison
 188 out of 188 predictions match
-Mean difference between predictions: 4.4960751236712825e-08
-Std dev of difference between predictions: 1.4669225492743017e-08
+Mean difference between predictions: -1.270028868389972e-08
+Std dev of difference between predictions: 9.327025899795536e-09
 
 Actual Estimator Evaluation Metrics
-AUROC Score 0.9796944858420268
-Accuracy Score 0.9202127659574468
-F1 Score 0.9407114624505928
+AUROC Score 0.9780560216858138
+Accuracy Score 0.9521276595744681
+F1 Score 0.9649805447470817
 
 Prod Estimator Evaluation Metrics:
-AUROC Score 0.9796944858420268
-Accuracy Score 0.9202127659574468
-F1 Score 0.9407114624505928
+AUROC Score 0.9780560216858138
+Accuracy Score 0.9521276595744681
+F1 Score 0.9649805447470817
 
-Comparison of 5 Predictions
-Prediction 0, Actual Model vs Production
-0.861517071723938 vs 0.8615170143624671
-Prediction 1, Actual Model vs Production
-0.21696722507476807 vs 0.21696719166246714
-Prediction 2, Actual Model vs Production
-0.861517071723938 vs 0.8615170143624671
-Prediction 3, Actual Model vs Production
-0.6107258200645447 vs 0.6107257820624672
-Prediction 4, Actual Model vs Production
-0.7350912094116211 vs 0.7350911622924672
 
 Time Benchmarks for 1 records with 30 features using 10 trees
-Average 5.4059999999999994e-05 seconds with standard deviation 8.236528394900365e-06 per 1 predictions
+Average 3.938e-05 seconds with standard deviation 2.114e-06 per 1 predictions
 
 
 Benchmark classification modeling
 =================================
 
 Actual vs Prod Estimator Comparison
-0 out of 188 predictions match
-Mean difference between predictions: 0.18719403647682603
-Std dev of difference between predictions: 0.033918844810309955
+188 out of 188 predictions match
+Mean difference between predictions: -1.7196643532927356e-08
+Std dev of difference between predictions: 2.7826259523143417e-08
 
 Actual Estimator Evaluation Metrics
-AUROC Score 0.9815573770491804
-Accuracy Score 0.9414893617021277
-F1 Score 0.9561752988047808
+AUROC Score 0.9777333161223698
+Accuracy Score 0.9468085106382979
+F1 Score 0.9609375
 
 Prod Estimator Evaluation Metrics:
-AUROC Score 0.9815573770491804
+AUROC Score 0.9777333161223698
 Accuracy Score 0.9468085106382979
-F1 Score 0.9586776859504132
+F1 Score 0.9609375
 
-Comparison of 5 Predictions
-Prediction 0, Actual Model vs Production
-0.85405033826828 vs 0.662387329307486
-Prediction 1, Actual Model vs Production
-0.2504895031452179 vs 0.10076255829216352
-Prediction 2, Actual Model vs Production
-0.8517128229141235 vs 0.6582086490048578
-Prediction 3, Actual Model vs Production
-0.3893463909626007 vs 0.17612317754562867
-Prediction 4, Actual Model vs Production
-0.8091333508491516 vs 0.5870082924902191
 
 Time Benchmarks for 1 records with 30 features using 10 trees
-Average 5.945e-05 seconds with standard deviation 1.533321557925799e-05 per 1 predictions
+Average 3.812e-05 seconds with standard deviation 1.381e-06 per 1 predictions
 ```
 
-## Initial Classification Debugging Results
+## License
 
-
-
-```
-Debugging Predicted Probability Calculations
-============================================
-
-Example for a single input:
-
-Actual prediction: 0.714256
-Production prediction: 0.4559565177126631
-
-Actual Model Leaf Nodes
-[7 7 7]
-
-Actual Model Margin Prediction
-0.9161452
-
-Production Leaf Nodes
-[7 7 7]
-
-Production Leaf Values
-[0.1548744  0.14447486 0.14081691]
-
-Sum of leaf values: 0.440166175
-Base score: 0.6167979002624672
-
-Testing different calculation methods:
-Sigmoid of (leaf value sum): 0.6082986262101555
-Sigmoid of (leaf value sum + base score): 0.7421099488091216
-Sigmoid of (leaf value sum - base score): 0.4559565177126631
-Sigmoid of (leaf value sum) - base score: -0.008499274052311656
-Sigmoid of (leaf value sum) + base score: 1.2250965264726226
-```
+Licensed under an MIT license.

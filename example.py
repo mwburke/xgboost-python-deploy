@@ -46,7 +46,7 @@ regression_params = {
 }
 
 classification_params = {
-    'base_score': np.mean(y_train),
+    'base_score': 0.5,  # np.mean(y_train),
     'max_depth': 3,
     'eta': 0.1,
     'objective': 'binary:logistic',
@@ -93,12 +93,6 @@ def benchmark(params, pred_type):
         print('Accuracy Score {}'.format(accuracy_score(y_test, prod_labels)))
         print('F1 Score {}'.format(f1_score(y_test, prod_labels)))
         print()
-
-        print('Comparison of 5 Predictions')
-        for i, (p, pp) in enumerate(zip(predictions[0:5], prod_predictions[0:5])):
-            print('Prediction {}, Actual Model vs Production'.format(i))
-            print('{} vs {}'.format(p, pp))
-
         print()
         test_data = x_test.head(1).to_dict(orient='records')
         print('Time Benchmarks for {} records with {} features using {} trees'.format(len(test_data), x_test.shape[1], num_boost_round))
@@ -113,7 +107,7 @@ def benchmark(params, pred_type):
 
         avg = np.mean(runtimes)
         std = np.std(runtimes)
-        print('Average {} seconds with standard deviation {} per {} predictions'.format(avg, std, len(test_data)))
+        print('Average {:.3e} seconds with standard deviation {:.3e} per {} predictions'.format(avg, std, len(test_data)))
 
 
 if __name__ == '__main__':
