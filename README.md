@@ -4,7 +4,7 @@ This package allows users to take their XGBoost models they developed in python,
 
 ## Installation
 
-You can install this from pip using `pip install xgboost-deploy-python`. The current version is 0.0.2.
+You can install this from pip using `pip install xgboost-deploy`. The current version is 0.0.2.
 
 It was tested on python 3.6 and and XGBoost 0.8.1.
 
@@ -202,4 +202,4 @@ Average 3.812e-05 seconds with standard deviation 1.381e-06 per 1 predictions
 
 ## License
 
-Licensed under an MIT license.
+Licensed under MIT license.
